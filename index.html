@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Total Risk Calculator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f5f5f7;
+      color: #1d1d1f;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #d1d1d6;
+      border-radius: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    input:focus, select:focus {
+      border-color: #0071e3;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+    }
+
+    .rider-group {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f9f9fa;
+      border-radius: 12px;
+    }
+
+    .term-input {
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+    }
+
+    .note {
+      font-size: 13px;
+      color: #888;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Total Risk Calculator</h1>
+
+    <label for="name">Name (optional)</label>
+    <input type="text" id="name">
+
+    <label for="dob">Date of Birth (for ANB)</label>
+    <input type="date" id="dob">
+
+    <label for="anb">Age Next Birthday (manual or auto-filled from DOB)</label>
+    <input type="number" id="anb" min="0">
+
+    <label for="status">Current Status</label>
+    <select id="status">
+      <option>Working</option>
+      <option>Juvenile</option>
+      <option>Housewife</option>
+      <option>Retiree</option>
+      <option>Bankruptcy</option>
+    </select>
+
+    <label for="income">Income per Month (RM)</label>
+    <input type="number" id="income">
+
+    <label for="extra">Taxable Extra Income (RM)</label>
+    <input type="number" id="extra">
+
+    <label for="basic">Basic Plan</label>
+    <select id="basic">
+      <option>Manulink Essential</option>
+      <option>Manulink Premier</option>
+      <option>Manulink Asset Shield</option>
+      <option>Manulink Essential Plus</option>
+      <option>Manulink Wealth</option>
+    </select>
+
+    <!-- Riders -->
+    <div id="riders"></div>
+  </div>
+
+  <script>
+    const statusField = document.getElementById('status');
+    const incomeField = document.getElementById('income');
+    const dobField = document.getElementById('dob');
+    const anbField = document.getElementById('anb');
+    const ridersDiv = document.getElementById('riders');
+
+    // Auto-set income = RM0 based on status
+    statusField.addEventListener('change', () => {
+      const zeroIncomeStatuses = ['Juvenile', 'Housewife', 'Retiree'];
+      if (zeroIncomeStatuses.includes(statusField.value)) {
+        incomeField.value = 0;
+        incomeField.readOnly = true;
+      } else {
+        incomeField.readOnly = false;
+      }
+    });
+
+    // Calculate ANB from Date of Birth
+    dobField.addEventListener('change', () => {
+      const dob = new Date(dobField.value);
+      if (isNaN(dob)) {
+        anbField.value = "";
+        anbField.readOnly = false;
+        return;
+      }
+
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const thisYearBirthday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+
+      if (today >= thisYearBirthday) {
+        age += 1;
+      }
+
+      anbField.value = age;
+      anbField.readOnly = true;
+    });
+
+    // Rider options
+    const riderOptions = [
+      "Beyond Critical Cover",
+      "Accelerated CI",
+      "Advance Beyond Critical Cover",
+      "Premium Care Benefit",
+      "CI Income plus benefit"
+    ];
+
+    // Create 6 riders
+    for (let i = 1; i <= 6; i++) {
+      const group = document.createElement('div');
+      group.className = 'rider-group';
+      group.innerHTML = `
+        <h3>Rider ${i}</h3>
+        <label>Rider Type</label>
+        <select class="rider-type" data-index="${i}">
+          ${riderOptions.map(opt => `<option>${opt}</option>`).join('')}
+        </select>
+
+        <label>Face Amount (RM)</label>
+        <input type="number" class="rider-amount" id="rider${i}-amount">
+
+        <div class="term-input" id="term-input-${i}">
+          <label>Term of Coverage (years)</label>
+          <input type="number" class="rider-term" id="rider${i}-term">
+        </div>
+      `;
+      ridersDiv.appendChild(group);
+    }
+
+    // Show/hide term coverage
+    document.querySelectorAll('.rider-type').forEach(select => {
+      select.addEventListener('change', (e) => {
+        const index = e.target.dataset.index;
+        const showTerm = ['Premium Care Benefit', 'CI Income plus benefit'];
+        const termDiv = document.getElementById(`term-input-${index}`);
+        if (showTerm.includes(e.target.value)) {
+          termDiv.style.display = 'block';
+        } else {
+          termDiv.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
